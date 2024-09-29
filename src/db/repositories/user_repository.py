@@ -1,7 +1,8 @@
-from src.core.models.users_model import users
 from .base_repository import BaseRepository
-from src.schemas.user_schemas import UserScheme, UpdateUserScheme, CreateUserScheme
+from src.core.interfaces.user_interface import IUserRepository
 
 
-class UserRepository(BaseRepository[users, UserScheme, CreateUserScheme, UpdateUserScheme]):
-    pass
+class UserRepository(BaseRepository, IUserRepository):
+    async def email_check_up(self, user_email: str) -> bool:
+        query = self.table.select().where(self.table.c.email == user_email)
+        return await self.db.execute(query=query)

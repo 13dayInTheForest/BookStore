@@ -1,7 +1,9 @@
 from fastapi import APIRouter
-from src.schemas.user_schemas import CreateUserScheme, UpdateUserScheme
-from src.db.repositories.user_repository import UserRepository
+from src.schemas.user_schemas import CreateUserSchema, UpdateUserSchema, UserSchema
+from src.db.repositories.user_repository import *
 from src.core.models.users_model import users
+from src.db.database import database
+from src.services.user_service import UserService
 
 
 router = APIRouter(
@@ -10,20 +12,31 @@ router = APIRouter(
 
 
 @router.post('/register')
-async def register_user(user: CreateUserScheme):
-    repo = UserRepository(users, CreateUserScheme)
-    return await repo.create(user)
+async def register_user(user: CreateUserSchema):
+    repo = UserRepository(database, users, UserSchema)
+    service = UserService(repo)
+
+    return await service.create_user(user)
 
 
 @router.get('/profile')
 async def get_user_profile(user_id: int):
-    repo = UserRepository(users, CreateUserScheme)
-    return await repo.read(user_id)
+    repo = UserRepository(database, users, UserSchema)
+    service = UserService(repo)
+    return await service.get_user_info(user_id)
 
 
 @router.post('/update')
-async def update_user(user_updates: UpdateUserScheme):
-    repo = UserRepository(users, CreateUserScheme)
-    user_id = user_updates.id
-    return await repo.update(user_id, user_updates)
+async def update_user(user_updates: UpdateUserSchema):
+    repo = UserRepository(database, users, UserSchema)
+    service = UserService(repo)
+    return await service.update_user(user_updates)
+
+
+@router.delete('/delete')
+async def delete_user(user_id: int):
+    repo = UserRepository(database, users, UserSchema)
+    service = UserService(repo)
+
+    return await service.delete_user(user_id)
 

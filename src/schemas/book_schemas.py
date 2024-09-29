@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from datetime import datetime
-from typing import Literal
+from datetime import date, datetime
 from enum import Enum
+from typing import Literal
 
 
 class BookStatus(Enum):
@@ -10,34 +10,48 @@ class BookStatus(Enum):
     DELETED = 'deleted'
 
 
-class CreateBookScheme(BaseModel):
+class CreateBookSchema(BaseModel):
     name: str
     author: str
-    description: str = None
-    date_created: datetime
+    description: str | None = None
+    date_created: date
+    url_to_file: str
     price: float = 0.0
-    status: BookStatus = BookStatus.DRAFT
+    status: Literal['available', 'draft', 'deleted']
 
 
-class UpdateBookScheme(BaseModel):
+class UpdateBookSchema(BaseModel):
     id: int
     name: str | None = None
     author: str | None = None
     description: str | None = None
-    date_created: datetime | None = None
+    date_created: date | None = None
+    url_to_file: str | None = None
     price: float | None = None
-    status: BookStatus | None = None
+    status: Literal['available', 'draft', 'deleted'] | None = None
 
 
-class BookScheme(BaseModel):
+class BookSchema(BaseModel):
     id: int
     name: str
     author: str
-    description: str
-    date_created: datetime
+    description: str | None
+    date_created: date
+    url_to_file: str | None
     price: float
-    status: BookStatus
+    status: Literal['available', 'draft', 'deleted']
     added_at: datetime
     updated_at: datetime
 
 
+class BookFilter(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    author: str | None = None
+    description: str | None = None
+    date_created: date | None = None
+    url_to_file: str | None = None
+    price: float | None = None
+    status: Literal['available', 'draft', 'deleted'] | None = None
+    added_at: datetime | None = None
+    updated_at: datetime | None = None

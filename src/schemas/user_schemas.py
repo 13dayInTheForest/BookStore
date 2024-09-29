@@ -2,15 +2,16 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
-class CreateUserScheme(BaseModel):
+class CreateUserSchema(BaseModel):
     name: str
     surname: str
     email: str
     password: str
     age: int | None = None
+    balance: float = 0.0
 
 
-class UpdateUserScheme(BaseModel):
+class UpdateUserSchema(BaseModel):
     id: int
     name: str | None = None
     surname: str | None = None
@@ -20,14 +21,14 @@ class UpdateUserScheme(BaseModel):
     balance: float | None = None
 
 
-class UserScheme(BaseModel):
+class UserSchema(BaseModel):
     id: int
     name: str
     surname: str
     email: str
     password: str
-    age: int | None = None
-    balance: float
+    age: int | None
+    balance: float | None
     register_at: datetime
 
 

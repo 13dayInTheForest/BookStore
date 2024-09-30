@@ -11,7 +11,6 @@ class BaseRepository:
 
     async def create(self, obj: Type[BaseModel]) -> int:  # Return User ID
         query = self.table.insert().values(**obj.dict())
-
         return await self.db.execute(query=query)
 
     async def read(self, obj_id: int) -> Type[BaseModel] | None:
@@ -25,7 +24,6 @@ class BaseRepository:
 
     async def delete(self, obj_id: int) -> None:
         query = self.table.delete().where(self.table.columns.id == obj_id)
-        print(query)
         await self.db.execute(query)
 
 

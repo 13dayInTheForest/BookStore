@@ -9,9 +9,9 @@ class UserService:
         self.repo = repo
 
     async def create_user(self, user: CreateUserSchema):
-        if await self.repo.email_check_up(user.email) is not None:
+        if await self.repo.email_check_up(user.email):
             raise HTTPException(status_code=403, detail='Email is Already Registered')
-        user_id = int(await self.repo.create(user))
+        user_id = await self.repo.create(user)
 
         return await self.repo.read(user_id)
 
@@ -27,7 +27,7 @@ class UserService:
             raise HTTPException(status_code=404, detail=f'No such User with id-{updates.id}')
         await self.repo.update(updates.id, updates)
 
-        return user
+        return await self.repo.read(updates.id)
 
     async def delete_user(self, user_id: int):
         user = await self.repo.read(user_id)

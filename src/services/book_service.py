@@ -9,16 +9,20 @@ class BookService:
         self.repo = repo
 
     async def create_book(self, book: CreateBookSchema):
-        if await self.repo.exists_book_check(book.author, book.name) is not None:
+        if await self.repo.exists_book_check(book.author, book.name):
             raise HTTPException(status_code=403, detail='Book is Already In Library')
         book_id = await self.repo.create(book)
 
         return await self.repo.read(book_id)
 
     async def get_book_info(self, book_id: int) -> BookSchema:
-        return await self.repo.read(book_id)
+        book = await self.repo.read(book_id)
+        if book is None:
+            raise HTTPException(status_code=404, detail=f'No such Book with id-{book_id}')
 
-    async def update_user(self, updates: UpdateBookSchema):
+        return book
+
+    async def update_book(self, updates: UpdateBookSchema):
         book = await self.repo.read(updates.id)
         if book is None:
             raise HTTPException(status_code=404, detail=f'No such Book with id-{updates.id}')
@@ -26,11 +30,15 @@ class BookService:
 
         return await self.repo.read(updates.id)
 
-    async def delete_user(self, book_id: int):
+    async def delete_book(self, book_id: int):
         book = await self.repo.read(book_id)
 
         if book is None:
-            raise HTTPException(status_code=404, detail=f'No such User with id-{book_id}')
+            raise HTTPException(status_code=404, detail=f'No such Book with id-{book_id}')
         await self.repo.delete(book_id)
 
         return book
+
+    async def get_books_list(self, offset: int, limit: int, books_filter: BookFilter):
+        book_list = await self.repo.get_book_list(offset, limit, books_filter)
+        return book_list

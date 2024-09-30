@@ -17,7 +17,7 @@ class CreateBookSchema(BaseModel):
     date_created: date
     url_to_file: str
     price: float = 0.0
-    status: Literal['available', 'draft', 'deleted']
+    status: Literal['available', 'draft', 'deleted'] = 'draft'
 
 
 class UpdateBookSchema(BaseModel):

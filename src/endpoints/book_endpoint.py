@@ -1,12 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from src.schemas.book_schemas import *
-from src.schemas.user_schemas import UserSchema
+from src.schemas.user_schemas import UserSchema, UpdateUserSchema
 from src.schemas.shelf_schemas import ShelfSchema
 from src.schemas.payment_schema import PaymentSchema
 from src.db.repositories import BookRepository, UserRepository, ShelfRepository
 from src.core.models import *
 from src.db.database import database
 from src.services import BookService, PurchaseService, YandexPaymentService
+from typing import Annotated
 
 
 router = APIRouter(
@@ -79,11 +80,12 @@ async def buy_book(user_id: int, book_id: int):
     return await purchase_service.create_purchase(user_id, book_id)
 
 
-@router.get('check_payment')
-async def check_payment(payment: PaymentSchema):
+@router.get('/check_payment')
+async def check_payment(payment: Annotated[PaymentSchema, Query(...)]):
     book_repo = BookRepository(database, books, BookSchema)
     user_repo = UserRepository(database, users, UserSchema)
     shelf_repo = ShelfRepository(database, shelf, ShelfSchema)
     purchase_service = PurchaseService(user_repo, book_repo, shelf_repo, YandexPaymentService())
+    await purchase_service.check_payment(payment)
 
-    return await purchase_service.check_payment(payment)
+    return

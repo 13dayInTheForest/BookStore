@@ -21,10 +21,9 @@ class PurchaseService:
         user = await self.user_repo.read(user_id)
         book = await self.book_repo.read(book_id)
 
-        if user:
+        if not user:
             raise HTTPException(status_code=404, detail='User not found')
-
-        if book:
+        if not book:
             raise HTTPException(status_code=404, detail='Book not found')
 
         if await self.shelf_repo.read_by_ids(user_id, book_id):
@@ -33,14 +32,14 @@ class PurchaseService:
         if book.status != BookStatus.AVAILABLE.value:
             raise HTTPException(status_code=403, detail='Book Unavailable')
 
-        if book.price == 0: # Add book to users shelf if it is free
+        if book.price == 0:  # Add book to users shelf if it is free
             await self.shelf_repo.create(CreateShelfSchema(user_id=user_id, book_id=book_id, bought_price=book.price))
 
         if user.balance < book.price:
             raise HTTPException(status_code=402, detail='Not enough funds to complete the purchase')
-        payment_id = await self.payment_repo.create_payment_intent(book.price, 'usd')
+        payment = await self.payment_repo.create_payment_intent(book.price, 'usd')
 
-        return PaymentSchema(payment_id=payment_id, user_id=user_id, book_id=book_id, price=book.price)
+        return PaymentSchema(payment_id=payment['payment_id'], user_id=user_id, book_id=book_id, price=book.price)
 
     async def check_payment(self, p: PaymentSchema):
         payment_status = await self.payment_repo.check_payment_status(p.payment_id)

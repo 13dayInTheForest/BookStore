@@ -70,22 +70,13 @@ async def get_book_list(id: int | None = None,
     return await service.get_books_list(offset, limit, book_filter)
 
 
-@router.post('/create_payment')
+@router.post('/buy')
 async def buy_book(user_id: int, book_id: int):
-    book_repo = BookRepository(database, books, BookSchema)
-    user_repo = UserRepository(database, users, UserSchema)
-    shelf_repo = ShelfRepository(database, shelf, ShelfSchema)
-    purchase_service = PurchaseService(user_repo, book_repo, shelf_repo, YandexPaymentService())
-
+    purchase_service = PurchaseService(
+        UserRepository(database, users, UserSchema),
+        BookRepository(database, books, BookSchema),
+        ShelfRepository(database, shelf, ShelfSchema),
+        YandexPaymentService()
+    )
     return await purchase_service.create_purchase(user_id, book_id)
 
-
-@router.get('/check_payment')
-async def check_payment(payment: Annotated[PaymentSchema, Query(...)]):
-    book_repo = BookRepository(database, books, BookSchema)
-    user_repo = UserRepository(database, users, UserSchema)
-    shelf_repo = ShelfRepository(database, shelf, ShelfSchema)
-    purchase_service = PurchaseService(user_repo, book_repo, shelf_repo, YandexPaymentService())
-    await purchase_service.check_payment(payment)
-
-    return

@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, Float, DateTime, ForeignKey, func
+from sqlalchemy import Table, Column, Integer, Float, DateTime, ForeignKey, func, Boolean
 from src.db.database import metadata
 
 
@@ -9,6 +9,7 @@ shelf = Table(
     Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE')),
     Column('book_id', Integer, ForeignKey('books.id', ondelete='CASCADE')),
     Column('bought_price', Float),
+    Column('in_library', Boolean, nullable=False, default=True),
     Column('date_added', DateTime, server_default=func.now()),
     Column('last_time_read', DateTime, server_default=func.now())
 )

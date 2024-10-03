@@ -40,4 +40,19 @@ class ShelfService:
 
     async def get_all_shelf(self, user_id: int):
         shelf = await self.repo.get_all_user_shelf(user_id)
+
         return shelf
+
+    async def delete_book_from_library(self, user_id: int, book_id: int):
+        shelf = await self.repo.read_by_ids(user_id, book_id)
+        if shelf is None or not shelf.in_library:
+            raise HTTPException(status_code=404,
+                                detail=f'No such Shelf with user id-{user_id} and book id-{book_id}'
+                                )
+        if shelf.bought_price > 0:
+            await self.repo.delete_book_from_library(user_id, book_id)
+        else:
+            await self.repo.delete_by_ids(user_id, book_id)
+
+        return {'detail': 'Book deleted'}
+

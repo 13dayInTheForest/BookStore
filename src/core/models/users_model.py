@@ -11,6 +11,7 @@ users = Table(
     Column('password', String, nullable=False),
     Column('age', Integer, nullable=True),
     Column('balance', Float, default=0.0),
+    Column('role', String, default='user'),
     Column('register_at', DateTime, server_default=func.now())
 )
 

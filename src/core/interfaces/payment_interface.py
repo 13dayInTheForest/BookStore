@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from src.schemas.payment_schema import CreatePaymentSchema, PaymentSchema
 
 
-class IPaymentRepository(ABC):
+class IPaymentService(ABC):
     @abstractmethod
-    async def create_payment_intent(self, amount: float, currency: str = 'usd'):
+    async def create_payment_intent(self, new_payment: CreatePaymentSchema) -> PaymentSchema:
         pass
 
     @abstractmethod
-    async def check_payment_status(self, payment_intent_id: str):
+    async def check_payment_status(self, payment: PaymentSchema):
         pass

@@ -23,3 +23,6 @@ class IUserRepository(ABC):
     async def email_check_up(self, user_email: str) -> bool:
         pass
 
+    @abstractmethod
+    async def withdraw_money(self, user_id: int, count: float) -> float:
+        pass

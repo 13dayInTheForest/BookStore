@@ -1,10 +1,11 @@
-from src.core.interfaces import IPaymentRepository
+from src.core.interfaces import IPaymentService
+from src.schemas.payment_schema import CreatePaymentSchema, PaymentSchema
 
 
-class YandexPaymentService(IPaymentRepository):
-    async def create_payment_intent(self, amount: float, currency: str = 'usd'):
-        return {'payment_id': 'pay1232-csad-213-cdsda'}
+class YandexPaymentService(IPaymentService):
+    async def create_payment_intent(self, new_payment: CreatePaymentSchema):
+        return PaymentSchema(payment_id='pay1232-csad-213-cdsda', **new_payment.dict())
 
-    async def check_payment_status(self, payment_intent_id: str):
+    async def check_payment_status(self, payment: PaymentSchema):
         return {'status': 'succeeded'}
 

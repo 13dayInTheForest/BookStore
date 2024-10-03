@@ -8,3 +8,7 @@ class PaymentSchema(BaseModel):
     price: float
 
 
+class CreatePaymentSchema(BaseModel):
+    user_id: int
+    book_id: int
+    price: float

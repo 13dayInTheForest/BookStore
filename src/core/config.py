@@ -17,8 +17,7 @@ class Setting(BaseSettings):
 
     TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
-    KEY_PRIVATE: str
-
+    SECRET_KEY: str
     ALGORITHM: str
 
     @property

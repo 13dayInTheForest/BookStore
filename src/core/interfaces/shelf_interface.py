@@ -12,7 +12,7 @@ class IShelfRepository(ABC):
         pass
 
     @abstractmethod
-    async def update(self, shelf_id: int, user: UpdateShelfSchema) -> None:
+    async def update(self, shelf_id: int, shelf: UpdateShelfSchema) -> None:
         pass
 
     @abstractmethod
@@ -20,9 +20,21 @@ class IShelfRepository(ABC):
         pass
 
     @abstractmethod
-    async def read_by_ids(self, user_id: int, book_id: int) -> bool:
+    async def read_by_ids(self, user_id: int, book_id: int) -> ShelfSchema:
+        pass
+
+    @abstractmethod
+    async def delete_by_ids(self, user_id: int, book_id: int):
         pass
 
     @abstractmethod
     async def get_all_user_shelf(self, user_id: int):
+        pass
+
+    @abstractmethod
+    async def delete_book_from_library(self, user_id: int, book_id: int):
+        pass
+
+    @abstractmethod
+    async def return_book_to_library(self, user_id: int, book_id: int):
         pass

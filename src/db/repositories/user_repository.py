@@ -1,8 +1,14 @@
 from .base_repository import BaseRepository
 from src.core.interfaces.user_interface import IUserRepository
+from src.schemas.user_schemas import CreateUserSchema, CreateUserWithRole
 
 
 class UserRepository(BaseRepository, IUserRepository):
+    async def create(self, user: CreateUserSchema) -> int:
+        user = CreateUserWithRole(**user.dict())
+        query = self.table.insert().values(**user.dict())
+        return await self.db.execute(query=query)
+
     async def email_check_up(self, user_email: str) -> bool:
         query = self.table.select().where(self.table.c.email == user_email)
         return await self.db.execute(query=query) is not None

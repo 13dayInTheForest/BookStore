@@ -9,8 +9,9 @@ class BaseRepository:
         self.table = table
         self.model = model
 
-    async def create(self, obj: Type[BaseModel]) -> int:  # Return User ID
+    async def create(self, obj: Type[BaseModel]) -> int:  # Return Obj ID
         query = self.table.insert().values(**obj.dict())
+        print(query)
         return await self.db.execute(query=query)
 
     async def read(self, obj_id: int) -> Type[BaseModel] | None:

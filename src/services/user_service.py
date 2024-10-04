@@ -2,18 +2,19 @@ from fastapi import HTTPException
 
 from src.core.interfaces.user_interface import IUserRepository
 from src.schemas.user_schemas import *
+from src.core.security import get_password_hash
 
 
 class UserService:
     def __init__(self, repo: IUserRepository):
         self.repo = repo
 
-    async def create_user(self, user: CreateUserSchema):
+    async def create_user(self, user: CreateUserSchema) -> None:
         if await self.repo.email_check_up(user.email):
             raise HTTPException(status_code=403, detail='Email is Already Registered')
+        user.password = get_password_hash(user.password)
         user_id = await self.repo.create(user)
-
-        return await self.repo.read(user_id)
+        await self.repo.read(user_id)
 
     async def get_user_info(self, user_id: int) -> UserSchema:
         user = await self.repo.read(user_id)

@@ -1,5 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 
+from src.schemas.auth_schema import TokenData
 from src.schemas.user_schemas import CreateUserSchema, UpdateUserSchema, UserSchema
 from src.db.repositories.user_repository import UserRepository
 from src.core.models.users_model import users
@@ -10,10 +12,8 @@ from src.db.repositories.shelf_repository import ShelfRepository
 from src.core.models.shelf_model import shelf
 from src.services.shelf_service import ShelfService
 
-from src.core.security import create_access_token, create_refresh_token
-
+from src.core.security import create_access_token, create_refresh_token, get_current_user
 from src.db.database import database
-
 
 
 router = APIRouter(
@@ -25,23 +25,26 @@ router = APIRouter(
 async def register_user(user: CreateUserSchema):
     repo = UserRepository(database, users, UserSchema)
     service = UserService(repo)
-    user_id = await service.create_user(user)
+    await service.create_user(user)
 
-    access_token = create_access_token({'user_id': user_id, 'role': 'user'})
-    refresh_token = create_refresh_token({'user_id': user_id, 'role': 'user'})
+    access_token = create_access_token(TokenData(sub=user.email, role='user'))
+    refresh_token = create_refresh_token(TokenData(sub=user.email, role='user'))
 
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    response = JSONResponse({"access_token": access_token, "token_type": "bearer"}, status_code=200)
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        httponly=True,
+    )
+    return response
 
 
 @router.get('/profile')
-async def get_user_profile(user_id: int):
+async def get_user_profile(user: UserSchema = Depends(get_current_user)):
+    print(user)
     repo = UserRepository(database, users, UserSchema)
     service = UserService(repo)
-    return await service.get_user_info(user_id)
+    return await service.get_user_info(user.id)
 
 
 @router.patch('/update')

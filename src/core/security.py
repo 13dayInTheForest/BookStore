@@ -1,14 +1,16 @@
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
+
 from passlib.context import CryptContext
 from src.core.config import settings
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from src.db.auth import get_user
-from src.schemas.user_schemas import UserInDBSchema
+from src.schemas.user_schemas import UserInDBSchema, UserSchema
+from src.schemas.auth_schema import TokenData
 
 
-pwd_context = CryptContext(schemes=[settings.ALGORITHM], deprecated='auto')
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
@@ -22,23 +24,30 @@ def verify_password(plain_password, hashed_password) -> bool:
 
 # ------------------------------------------------------------Work with JWT
 
-def create_token(data: dict, token_expire_delta: timedelta):
-    to_encode = data.copy()
+def create_token(data: TokenData, token_expire_delta: timedelta) -> str:
+    to_encode = data.dict()
     expire = datetime.utcnow() + token_expire_delta
     to_encode.update({'exp': expire})
 
     return jwt.encode(to_encode, settings.SECRET_KEY, settings.ALGORITHM)
 
 
-def create_access_token(data: dict):
+def create_access_token(data: TokenData):
     return create_token(data, timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES))
 
 
-def create_refresh_token(data: dict):
+def create_refresh_token(data: TokenData):
     return create_token(data, timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
 
 
-async def get_current_user(token: str) -> UserInDBSchema:
+async def authenticate_user(email: str, password: str) -> UserInDBSchema | bool:
+    user = await get_user(email)
+    if user is None or not verify_password(password, user.password):
+        return False
+    return user
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserSchema:
     credential_exception = HTTPException(
         status_code=401,
         detail='Invalid Credentials',
@@ -46,14 +55,37 @@ async def get_current_user(token: str) -> UserInDBSchema:
     )
     try:
         token_details = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
-        if token_details.get('id') is None:
+        if token_details.get('sub') is None:
             raise credential_exception
     except JWTError:
         raise credential_exception
 
-    user = await get_user(token_details.get('user_id'))
+    user = await get_user(token_details.get('sub'))
     if user is None:
         raise credential_exception
 
     return user
+
+
+def refresh_jwt_token(token):
+    try:
+        refresh_detail = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
+
+        if not refresh_detail.get('sub') and not refresh_detail.get('role'):
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+        return create_access_token(TokenData(sub=refresh_detail.get('sub'), role='user'))
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+
+
+
+
+
+
+
+
 

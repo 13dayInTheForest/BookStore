@@ -1,6 +1,12 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Literal
+from enum import Enum
+
+
+class UserRole(Enum):
+    USER = 'user'
+    ADMIN = 'admin'
 
 
 class CreateUserSchema(BaseModel):
@@ -12,6 +18,10 @@ class CreateUserSchema(BaseModel):
     balance: float = 0.0
 
 
+class CreateUserWithRole(CreateUserSchema):
+    role: Literal['user', 'admin'] = 'user'
+
+
 class UpdateUserSchema(BaseModel):
     id: int
     name: str | None = None
@@ -20,7 +30,6 @@ class UpdateUserSchema(BaseModel):
     password: str | None = None
     age: int | None = None
     balance: float | None = None
-    role: None = None
 
 
 class UserSchema(BaseModel):
@@ -30,7 +39,7 @@ class UserSchema(BaseModel):
     email: EmailStr
     age: int | None
     balance: float | None
-    role: Literal['user', 'admin']
+    role: UserRole
     register_at: datetime
 
 

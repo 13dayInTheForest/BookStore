@@ -11,7 +11,7 @@ class BookService:
 
     async def create_book(self, book: CreateBookSchema):
         if await self.repo.exists_book_check(book.author, book.name):
-            raise HTTPException(status_code=403, detail='Book is Already In Library')
+            raise HTTPException(status_code=403, detail='Book is Already In Store')
         book_id = await self.repo.create(book)
 
         return await self.repo.read(book_id)

@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.post('/create', response_model=BaseModel)
+@router.post('/create')
 async def create_book(book: CreateBookSchema, user: UserSchema = Depends(get_current_user)):
     if user.role == UserRole.USER:
         raise HTTPException(status_code=403, detail='Forbidden')

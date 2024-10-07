@@ -20,11 +20,13 @@ class ShelfRepository(BaseRepository, IShelfRepository):
         await self.db.fetch_one(query=query)
 
     async def get_all_user_shelf(self, user_id: int):
-        query = self.model.select().where(
-            self.model.c.user_id == user_id).where(
-            self.model.c.in_library
-        )
-        return await self.db.fetch_all(query=query)
+        query = '''
+        SELECT b.*
+        FROM books b
+        JOIN shelf s ON b.id = s.book_id
+        WHERE s.user_id = :user_id
+        '''
+        return await self.db.fetch_all(query=query, values={'user_id': user_id})
 
     async def delete_book_from_library(self, user_id: int, book_id: int):
         query = self.model.update().where(

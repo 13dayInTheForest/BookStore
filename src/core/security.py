@@ -76,16 +76,6 @@ def refresh_jwt_token(token):
 
         return create_access_token(TokenData(sub=refresh_detail.get('sub'), role='user'))
 
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-
-
-
-
-
-
-
-
-
-
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Refresh Token expired')
 

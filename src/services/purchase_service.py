@@ -33,7 +33,8 @@ class PurchaseService:
         if shelf is not None:
             if shelf.in_library:
                 raise HTTPException(status_code=409, detail='User has already buy this book')
-            await self.__return_bought_book_to_library(user_id, book_id)
+            else:
+                return await self.__return_bought_book_to_library(user_id, book_id)
 
         if book.price == 0:  # Add book to users shelf if it is free
             return await self.__add_book_to_users_shelf(

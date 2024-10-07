@@ -23,13 +23,11 @@ class CreateUserWithRole(CreateUserSchema):
 
 
 class UpdateUserSchema(BaseModel):
-    id: int
+    id: int | None = None
     name: str | None = None
     surname: str | None = None
-    email: EmailStr | None = None
     password: str | None = None
     age: int | None = None
-    balance: float | None = None
 
 
 class UserSchema(BaseModel):

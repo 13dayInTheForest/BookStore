@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 from src.schemas.auth_schema import TokenData
-from src.schemas.user_schemas import CreateUserSchema, UpdateUserSchema, UserSchema
+from src.schemas.user_schemas import CreateUserSchema, UpdateUserSchema, UserSchema, UserRole
 from src.db.repositories.user_repository import UserRepository
 from src.core.models.users_model import users
 from src.services.user_service import UserService
@@ -40,38 +40,55 @@ async def register_user(user: CreateUserSchema):
 
 
 @router.get('/profile')
-async def get_user_profile(user: UserSchema = Depends(get_current_user)):
-    print(user)
+async def get_user_profile(user_id: int = None, user: UserSchema = Depends(get_current_user)):
+    if user_id and user.role == UserRole.USER and user.id != user_id:
+        raise HTTPException(status_code=403, detail='Forbidden')
+
     repo = UserRepository(database, users, UserSchema)
     service = UserService(repo)
-    return await service.get_user_info(user.id)
+    return await service.get_user_info(user_id if user_id else user.id)
 
 
 @router.patch('/update')
-async def update_user(user_updates: UpdateUserSchema):
+async def update_user(user_updates: UpdateUserSchema, user: UserSchema = Depends(get_current_user)):
+    if user_updates.id and user.role == UserRole.USER and user_updates.id != user.id:
+        raise HTTPException(status_code=403, detail='Forbidden')
+
+    if user_updates.id is None:
+        user_updates.id = user.id
+
     repo = UserRepository(database, users, UserSchema)
     service = UserService(repo)
     return await service.update_user(user_updates)
 
 
 @router.delete('/delete')
-async def delete_user(user_id: int):
+async def delete_user(user_id: int = None, user: UserSchema = Depends(get_current_user)):
+    if user_id and user.role == UserRole.USER and user.id != user_id:
+        raise HTTPException(status_code=403, detail='Forbidden')
+
     repo = UserRepository(database, users, UserSchema)
     service = UserService(repo)
 
-    return await service.delete_user(user_id)
+    return await service.delete_user(user_id if user_id else user.id)
 
 
 @router.get('/my_books')
-async def get_all_user_books(user_id: int):
+async def get_all_user_books(user_id: int = None, user: UserSchema = Depends(get_current_user)):
+    if user_id and user.role == UserRole.USER and user.id != user_id:
+        raise HTTPException(status_code=403, detail='Forbidden')
+
     repo = ShelfRepository(database, shelf, ShelfSchema)
     service = ShelfService(repo)
 
-    return {'books': await service.get_all_shelf(user_id)}
+    return {'books': await service.get_all_shelf(user_id if user_id else user.id)}
 
 
 @router.delete('/delete_book')
-async def delete_book_from_library(user_id: int, book_id: int):
-    shelf_service = ShelfService(ShelfRepository(database, shelf, ShelfSchema))
+async def delete_book_from_library(book_id: int, user_id: int = None, user: UserSchema = Depends(get_current_user)):
+    if user_id and user.role == UserRole.USER and user.id != user_id:
+        raise HTTPException(status_code=403, detail='Forbidden')
 
-    return await shelf_service.delete_book_from_library(user_id, book_id)
+    shelf_service = ShelfService(ShelfRepository(database, shelf, ShelfSchema))
+    await shelf_service.delete_book_from_library(user_id if user_id else user.id, book_id)
+    return {'detail': 'Book deleted from library'}

@@ -3,7 +3,7 @@ from fastapi import HTTPException, Depends
 
 from passlib.context import CryptContext
 from src.core.config import settings
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta
 from src.db.auth import get_user
 from src.schemas.user_schemas import UserInDBSchema, UserSchema
@@ -57,8 +57,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserSchema:
         token_details = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
         if token_details.get('sub') is None:
             raise credential_exception
-    except JWTError:
-        raise credential_exception
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Token expired')
 
     user = await get_user(token_details.get('sub'))
     if user is None:

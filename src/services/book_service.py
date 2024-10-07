@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 
 from src.core.interfaces.book_interface import IBookRepository
+from src.core.interfaces.shelf_interface import IShelfRepository
 from src.schemas.book_schemas import *
 
 
@@ -19,8 +20,23 @@ class BookService:
         book = await self.repo.read(book_id)
         if book is None:
             raise HTTPException(status_code=404, detail=f'No such Book with id-{book_id}')
-
         return book
+
+    async def get_personalized_book_info(self,
+                                         user_id: int,
+                                         book_id: int,
+                                         shelf_repo: IShelfRepository
+                                         ) -> BookForUserSchema:
+        book = await self.get_book_info(book_id)
+        shelf_info = await shelf_repo.read_by_ids(user_id, book_id)
+        if shelf_info is not None:
+            book_info = BookForUserSchema(bought=shelf_info is not None,
+                                          in_library=shelf_info.in_library,
+                                          **book.dict())
+        else:
+            book_info = BookForUserSchema(bought=False, in_library=False, **book.dict())
+
+        return book_info
 
     async def update_book(self, updates: UpdateBookSchema):
         book = await self.repo.read(updates.id)

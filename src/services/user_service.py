@@ -26,6 +26,7 @@ class UserService:
         user = await self.repo.read(updates.id)
         if user is None:
             raise HTTPException(status_code=404, detail=f'No such User with id-{updates.id}')
+
         await self.repo.update(updates.id, updates)
 
         return await self.repo.read(updates.id)

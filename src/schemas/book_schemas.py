@@ -44,6 +44,11 @@ class BookSchema(BaseModel):
     updated_at: datetime
 
 
+class BookForUserSchema(BookSchema):
+    bought: bool
+    in_library: bool
+
+
 class BookFilter(BaseModel):
     id: int | None = None
     name: str | None = None

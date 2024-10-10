@@ -56,3 +56,6 @@ class ShelfService:
 
         return {'detail': 'Book deleted'}
 
+    async def get_shelf_by_ids(self, user_id: int, book_id: int):
+        return await self.repo.read_by_ids(user_id, book_id)
+

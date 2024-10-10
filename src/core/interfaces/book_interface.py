@@ -26,3 +26,4 @@ class IBookRepository(ABC):
     @abstractmethod
     async def get_book_list(self, offset: int, limit: int, book_filter: BookFilter):
         pass
+

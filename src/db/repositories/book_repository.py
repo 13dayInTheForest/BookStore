@@ -1,4 +1,3 @@
-from src.core.models.users_model import users
 from .base_repository import BaseRepository
 from src.core.interfaces.book_interface import IBookRepository
 from src.schemas.book_schemas import BookFilter
@@ -12,3 +11,4 @@ class BookRepository(BaseRepository, IBookRepository):
     async def get_book_list(self, offset: int, limit: int, book_filter: BookFilter):
         query = self.model.select().filter_by(**book_filter.dict(exclude_none=True)).limit(limit).offset(offset)
         return await self.db.fetch_all(query=query)
+

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from src.schemas.book_schemas import *
 from src.schemas.user_schemas import UserSchema, UserRole
-from src.schemas.shelf_schemas import ShelfSchema
-from src.db.repositories import BookRepository, UserRepository, ShelfRepository
-from src.core.models import *
+
 from src.db.database import database
-from src.services import BookService, PurchaseService, YandexPaymentService
 from src.core.security import get_current_user
+from src.services import get_book_service, get_purchase_service, get_shelf_service, YandexPaymentService
+
 
 router = APIRouter(
     prefix='/books'
@@ -18,19 +18,23 @@ async def create_book(book: CreateBookSchema, user: UserSchema = Depends(get_cur
     if user.role == UserRole.USER:
         raise HTTPException(status_code=403, detail='Forbidden')
 
-    repo = BookRepository(database, books, BookSchema)
-    service = BookService(repo)
-
+    service = get_book_service(database)
     return await service.create_book(book)
 
 
 @router.get('/get')
 async def show_book_info(book_id: int, user: UserSchema = Depends(get_current_user)):
-    book_repo = BookRepository(database, books, BookSchema)
-    shelf_repo = ShelfRepository(database, shelf, ShelfSchema)
-    book_service = BookService(book_repo)
+    shelf_service = get_shelf_service(database)
+    book_service = get_book_service(database)
 
-    return await book_service.get_personalized_book_info(user.id, book_id, shelf_repo)
+    shelf_info = await shelf_service.get_shelf_by_ids(user.id, book_id)
+    book_info = await book_service.get_book_info(book_id)
+
+    return BookForUserSchema(
+        **book_info.dict(),
+        in_library=shelf_info.in_library if shelf_info is not None else False,
+        bought=shelf_info is not None
+    )
 
 
 @router.patch('/update')
@@ -38,9 +42,7 @@ async def update_book(book_updates: UpdateBookSchema, user: UserSchema = Depends
     if user.role == UserRole.USER:
         raise HTTPException(status_code=403, detail='Forbidden')
 
-    repo = BookRepository(database, books, BookSchema)
-    service = BookService(repo)
-
+    service = get_book_service(database)
     return await service.update_book(book_updates)
 
 
@@ -49,9 +51,7 @@ async def delete_book(book_id: int, user: UserSchema = Depends(get_current_user)
     if user.role == UserRole.USER:
         raise HTTPException(status_code=403, detail='Forbidden')
 
-    repo = BookRepository(database, books, BookSchema)
-    service = BookService(repo)
-
+    service = get_book_service(database)
     return await service.delete_book(book_id)
 
 
@@ -74,18 +74,13 @@ async def get_book_list(id: int | None = None,
                              date_created=date_created, url_to_file=url_to_file, price=price,
                              status=status, added_at=added_at, updated_at=updated_at)
 
-    repo = BookRepository(database, books, BookSchema)
-    service = BookService(repo)
+    service = get_book_service(database)
     return await service.get_books_list(offset, limit, book_filter)
 
 
 @router.post('/buy')
 async def buy_book(book_id: int, user: UserSchema = Depends(get_current_user)):
-    purchase_service = PurchaseService(
-        UserRepository(database, users, UserSchema),
-        BookRepository(database, books, BookSchema),
-        ShelfRepository(database, shelf, ShelfSchema),
-        YandexPaymentService()
-    )
+    payment_service = YandexPaymentService()
+    purchase_service = get_purchase_service(database, payment_service)
     return await purchase_service.create_purchase(user.id, book_id)
 

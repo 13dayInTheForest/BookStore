@@ -4,17 +4,24 @@ from src.schemas.book_schemas import BookStatus
 from src.schemas.shelf_schemas import CreateShelfSchema
 from src.schemas.payment_schema import PaymentSchema, CreatePaymentSchema
 
+from src.db.repositories.user_repository import UserRepository
+from src.db.repositories.book_repository import BookRepository
+from src.db.repositories.shelf_repository import ShelfRepository
+
+from src.schemas.user_schemas import UserSchema
+from src.schemas.book_schemas import BookSchema
+from src.schemas.shelf_schemas import ShelfSchema
+
+from src.core.models.users_model import users
+from src.core.models.books_model import books
+from src.core.models.shelf_model import shelf
+
 
 class PurchaseService:
-    def __init__(self,
-                 user_repo: IUserRepository,
-                 book_repo: IBookRepository,
-                 shelf_repo: IShelfRepository,
-                 payment_service: IPaymentService
-                 ):
-        self.user_repo = user_repo
-        self.book_repo = book_repo
-        self.shelf_repo = shelf_repo
+    def __init__(self, db, payment_service: IPaymentService):
+        self.user_repo: IUserRepository = UserRepository(db, users, UserSchema)
+        self.book_repo: IBookRepository = BookRepository(db, books, BookSchema)
+        self.shelf_repo: IShelfRepository = ShelfRepository(db, shelf, ShelfSchema)
         self.payment_service = payment_service
 
     async def create_purchase(self, user_id: int, book_id: int):

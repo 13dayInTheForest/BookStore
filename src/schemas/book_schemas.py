@@ -50,6 +50,9 @@ class BookForUserSchema(BookSchema):
 
 
 class BookFilter(BaseModel):
+    offset: int = 0
+    limit: int = 5
+
     id: int | None = None
     name: str | None = None
     author: str | None = None

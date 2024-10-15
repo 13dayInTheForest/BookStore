@@ -8,7 +8,7 @@ class BookRepository(BaseRepository, IBookRepository):
         query = self.model.select().where(self.model.c.name == book_name).where(self.model.c.author == author_name)
         return await self.db.execute(query=query) is not None
 
-    async def get_book_list(self, offset: int, limit: int, book_filter: BookFilter):
-        query = self.model.select().filter_by(**book_filter.dict(exclude_none=True)).limit(limit).offset(offset)
+    async def get_book_list(self, offset: int, limit: int, book_filter: dict):
+        query = self.model.select().filter_by(**book_filter).limit(limit).offset(offset)
         return await self.db.fetch_all(query=query)
 

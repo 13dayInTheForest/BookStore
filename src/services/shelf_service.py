@@ -1,12 +1,14 @@
 from fastapi import HTTPException
 
 from src.core.interfaces.shelf_interface import IShelfRepository
+from src.core.models import shelf as shelf_model
+from src.db.repositories import ShelfRepository
 from src.schemas.shelf_schemas import *
 
 
 class ShelfService:
-    def __init__(self, repo: IShelfRepository):
-        self.repo = repo
+    def __init__(self, db):
+        self.repo: IShelfRepository = ShelfRepository(db, shelf_model, ShelfSchema)
 
     async def create_shelf(self, shelf: CreateShelfSchema):
         if await self.repo.read_by_ids(shelf.user_id, shelf.book_id) is not None:
@@ -58,4 +60,3 @@ class ShelfService:
 
     async def get_shelf_by_ids(self, user_id: int, book_id: int):
         return await self.repo.read_by_ids(user_id, book_id)
-

@@ -1,21 +1,27 @@
 from fastapi import HTTPException
 from src.core.interfaces import *
-from src.schemas.book_schemas import BookStatus
-from src.schemas.shelf_schemas import CreateShelfSchema
+from src.core.models import shelf as shelf_model, books as books_model, users as users_model
+from src.db.repositories import UserRepository, BookRepository, ShelfRepository
+
+from .payment.yandex_payment_service import YandexPaymentService
+from src.schemas.book_schemas import BookStatus, BookSchema
+from src.schemas.shelf_schemas import CreateShelfSchema, ShelfSchema
 from src.schemas.payment_schema import PaymentSchema, CreatePaymentSchema
+from src.schemas.user_schemas import UserSchema
+
+
+
+from typing import Literal
 
 
 class PurchaseService:
-    def __init__(self,
-                 user_repo: IUserRepository,
-                 book_repo: IBookRepository,
-                 shelf_repo: IShelfRepository,
-                 payment_service: IPaymentService
-                 ):
-        self.user_repo = user_repo
-        self.book_repo = book_repo
-        self.shelf_repo = shelf_repo
-        self.payment_service = payment_service
+    def __init__(self, db, payment_method: Literal['yandex']):
+        self.user_repo: IUserRepository = UserRepository(db, users_model, UserSchema)
+        self.book_repo: IBookRepository = BookRepository(db, books_model, BookSchema)
+        self.shelf_repo: IShelfRepository = ShelfRepository(db, shelf_model, ShelfSchema)
+
+        if payment_method == 'yandex':
+            self.payment_service = YandexPaymentService()
 
     async def create_purchase(self, user_id: int, book_id: int):
         user = await self.user_repo.read(user_id)

@@ -1,5 +1,8 @@
+from typing import Literal
+
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import HTTPException, Depends
+from fastapi.responses import JSONResponse
 
 from passlib.context import CryptContext
 from src.core.config import settings
@@ -79,3 +82,16 @@ def refresh_jwt_token(token):
     except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail='Refresh Token expired')
 
+
+def get_tokens_response(email: str, role: Literal['user', 'admin']):
+    access_token = create_access_token(TokenData(sub=email, role=role))
+    refresh_token = create_refresh_token(TokenData(sub=email, role=role))
+
+    response = JSONResponse({"access_token": access_token, "token_type": "bearer"}, status_code=200)
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        httponly=True,
+    )
+
+    return response

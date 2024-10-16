@@ -1,20 +1,21 @@
 from fastapi import HTTPException
 
 from src.core.interfaces.user_interface import IUserRepository
+from src.core.models import users as user_model
+from src.db.repositories import UserRepository
 from src.schemas.user_schemas import *
 from src.core.security import get_password_hash
 
 
 class UserService:
-    def __init__(self, repo: IUserRepository):
-        self.repo = repo
+    def __init__(self, db):
+        self.repo: IUserRepository = UserRepository(db, user_model, UserSchema)
 
     async def create_user(self, user: CreateUserSchema) -> None:
         if await self.repo.email_check_up(user.email):
             raise HTTPException(status_code=403, detail='Email is Already Registered')
         user.password = get_password_hash(user.password)
-        user_id = await self.repo.create(user)
-        await self.repo.read(user_id)
+        await self.repo.create(user)
 
     async def get_user_info(self, user_id: int) -> UserSchema:
         user = await self.repo.read(user_id)
@@ -22,7 +23,7 @@ class UserService:
             raise HTTPException(status_code=404, detail='User Not Found')
         return await self.repo.read(user_id)
 
-    async def update_user(self, updates: UpdateUserSchema):
+    async def update_user(self, updates: UpdateUserSchema) -> UserSchema:
         user = await self.repo.read(updates.id)
         if user is None:
             raise HTTPException(status_code=404, detail=f'No such User with id-{updates.id}')
@@ -31,7 +32,7 @@ class UserService:
 
         return await self.repo.read(updates.id)
 
-    async def delete_user(self, user_id: int):
+    async def delete_user(self, user_id: int) -> UserSchema:
         user = await self.repo.read(user_id)
 
         if user is None:

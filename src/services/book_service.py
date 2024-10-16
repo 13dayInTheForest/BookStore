@@ -1,13 +1,14 @@
 from fastapi import HTTPException
 
 from src.core.interfaces.book_interface import IBookRepository
-from src.core.interfaces.shelf_interface import IShelfRepository
+from src.core.models import books as book_model
+from src.db.repositories import BookRepository
 from src.schemas.book_schemas import *
 
 
 class BookService:
-    def __init__(self, repo: IBookRepository):
-        self.repo = repo
+    def __init__(self, db):
+        self.repo: IBookRepository = BookRepository(db, book_model, BookSchema)
 
     async def create_book(self, book: CreateBookSchema):
         if await self.repo.exists_book_check(book.author, book.name):
@@ -39,6 +40,9 @@ class BookService:
 
         return book
 
-    async def get_books_list(self, offset: int, limit: int, books_filter: BookFilter):
-        book_list = await self.repo.get_book_list(offset, limit, books_filter)
-        return book_list
+    async def get_books_list(self, books_filter: BookFilter):
+        books_filter = books_filter.dict(exclude_none=True)
+        offset = books_filter.pop('offset')
+        limit = books_filter.pop('limit')
+
+        return await self.repo.get_book_list(offset, limit, books_filter)

@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Cookie
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.core.security import authenticate_user, create_access_token, create_refresh_token, refresh_jwt_token
+from src.core.security import authenticate_user, create_access_token, create_refresh_token, refresh_jwt_token, \
+    get_tokens_response
 from src.schemas.auth_schema import TokenData, Token
 
 
@@ -15,17 +16,7 @@ async def login_for_token(form_data: OAuth2PasswordRequestForm = Depends()):
     if not user:
         raise HTTPException(status_code=400, detail='Incorrect Email or Password')
 
-    access_token = create_access_token(TokenData(sub=form_data.username, role='user'))
-    refresh_token = create_refresh_token(TokenData(sub=form_data.username, role='user'))
-
-    response = JSONResponse({"access_token": access_token, "token_type": "bearer"}, status_code=200)
-    response.set_cookie(
-        key='refresh_token',
-        value=refresh_token,
-        httponly=True,
-    )
-
-    return response
+    return get_tokens_response(user.email, user.role)
 
 
 @router.get('/refresh', response_model=Token)

@@ -37,7 +37,7 @@ class UserSchema(BaseModel):
     email: EmailStr
     age: int | None
     balance: float | None
-    role: UserRole
+    role: Literal['user', 'admin']
     register_at: datetime
 
 
